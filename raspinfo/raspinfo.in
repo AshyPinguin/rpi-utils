@@ -8,6 +8,9 @@
 
 alias filter="sed -e 's/\([0-9a-fA-F]\{1,4\}:\)\{7,7\}[0-9a-fA-F]\{1,4\}/y.y.y.y.y.y.y.y/g' | sed -e 's/[0-9a-fA-F]\{1,4\}:\(:[0-9a-fA-F]\{1,4\}\)\{1,4\}/y::y.y.y.y/g' | sed -e 's/\([0-9]\{1,3\}\.\)\{3,3\}[0-9]\{1,3\}/x.x.x.x/g' | sed -e 's/\([0-9a-fA-F]\{2,2\}\:\)\{5,5\}[0-9a-fA-F]\{2,2\}/m.m.m.m/g'"
 
+# like the name suggest don't put the variable in cmake or this check will return false when it should return true
+alias post_cmake="[ '@DONT_PUT_IN_CMAKE_THIS_VAR_IS_TO_TEST_IF_CMAKE_HAS_BEEN_USED@' = '' ]"
+
 display_info_drm() {
    # kmsprint is more useful, but not always installed
    if command -v kmsprint > /dev/null; then
@@ -17,7 +20,11 @@ display_info_drm() {
       echo
       kmsprint -p
    else
-      echo "@KMS_NOTFOUND_MSG@"
+      if post_cmake; then
+         echo "@KMS_NOTFOUND_MSG@"
+      else
+         echo "kmsprint is not found."
+      fi
    fi
 
    echo
@@ -166,7 +173,11 @@ audio_info() {
    if command -v pactl > /dev/null; then
       pactl info
    else
-      echo "@PACTL_NOTFOUND_MSG@"
+      if post_cmake; then
+         echo "@PACTL_NOTFOUND_MSG@"
+      else
+         echo "pactl is not found." 
+      fi
    fi
 }
 
@@ -200,7 +211,11 @@ network_info() {
          fi
       done
    else
-      echo "@ETHTOOL_NOTFOUND_MSG@"
+      if post_cmake; then
+         echo "@ETHTOOL_NOTFOUND_MSG@"
+      else
+         echo "ethtool is not found."
+      fi
    fi
 }
 
@@ -260,12 +275,14 @@ df
 echo
 cat /proc/swaps
 
-echo
-echo "Package version information"
-echo "---------------------------"
-echo
-
-@PKG_VERSION_CMD@
+if post_cmake; then
+   echo
+   echo "Package version information"
+   echo "---------------------------"
+   echo
+   
+   @PKG_VERSION_CMD@
+fi
 
 echo
 echo "Networking Information"
@@ -322,7 +339,11 @@ if command -v pinctrl > /dev/null; then
 elif command -v raspi-gpio > /dev/null; then
    raspi-gpio get 2>&1
 else
-   echo "@PINCTRL_NOTFOUND_MSG@"
+   if post_cmake; then
+      echo "@PINCTRL_NOTFOUND_MSG@"
+   else
+      echo "pinctrl/raspi-gpio is not found."
+   fi
 fi
 
 echo
@@ -335,7 +356,11 @@ if command -v vcdbg > /dev/null; then
 elif command -v vclog > /dev/null; then
    sudo vclog --msg 2>&1
 else
-   echo "@VCDBG_NOTFOUND_MSG@"
+   if post_cmake; then
+      echo "@VCDBG_NOTFOUND_MSG@"
+   else
+      echo "vcdbg is not found."
+   fi
 fi
 
 echo
@@ -354,6 +379,10 @@ then
    if command -v rpi-eeprom-update > /dev/null; then
       sudo rpi-eeprom-update
    else
-      echo "@RPI_EEPROM_UPDATE_NOTFOUND_MSG@"
+      if post_cmake; then
+         echo "@RPI_EEPROM_UPDATE_NOTFOUND_MSG@"
+      else
+         echo "rpi-eeprom-update is not found."
+      fi
    fi
 fi
